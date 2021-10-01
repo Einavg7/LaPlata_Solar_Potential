@@ -106,7 +106,7 @@
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         });
 
-        let breaks = [-Infinity, 25333.76, 34248.60, 47132.85, 62606.10, 81277.84, 110115.58, 157131.12, 270478.81, Infinity];
+        let breaks = [-Infinity, 30785.02, 43833.10, 58569.53, 72500.23, 134481.55, 230200.28, 366629.25, 673504.41, Infinity];
         let colors = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
 
         function build_color(d) {
@@ -142,7 +142,7 @@
               }
           });*/
 
-        $.getJSON('rosario_sp.geojson', function (data) {
+        $.getJSON('laplata_gj.geojson', function (data) {
             myLayer = L.geoJSON(data,
                 { style: build_style, onEachFeature: Base_pop }).addTo(map);
         });
@@ -162,15 +162,15 @@
             var div = L.DomUtil.create("div", "legend");
             div.innerHTML =
                 '<i style="background-color: #ffffcc">' +
-                '</i>1059 - 25334 (kWh)<br>' +
-                '<i style="background-color: #ffeda0">' + '</i>25334 - 34249 (kWh)<br>' +
-                '<i style="background-color: #fed976">' + '</i>34249 - 47133 (kWh)<br>' +
-                '<i style="background-color: #feb24c">' + '</i>47133 - 62606 (kWh)<br>' +
-                '<i style="background-color: #fd8d3c">' + '</i>62606 - 81278 (kWh)<br>' +
-                '<i style="background-color: #fc4e2a">' + '</i>81278 - 110116 (kWh)<br>' +
-                '<i style="background-color: #e31a1c">' + '</i>110116 - 157131 (kWh)<br>' +
-                '<i style="background-color: #bd0026">' + '</i>157131 - 270479 (kWh)<br>' +
-                '<i style="background-color: #800026">' + '</i>270479 - 9788517 (kWh)<br>'
+                '</i>3228 - 30785 (kWh)<br>' +
+                '<i style="background-color: #ffeda0">' + '</i>30785 - 43833 (kWh)<br>' +
+                '<i style="background-color: #fed976">' + '</i>43833 - 58570 (kWh)<br>' +
+                '<i style="background-color: #feb24c">' + '</i>58570 - 72500 (kWh)<br>' +
+                '<i style="background-color: #fd8d3c">' + '</i>72500 - 134482 (kWh)<br>' +
+                '<i style="background-color: #fc4e2a">' + '</i>134482 - 230200 (kWh)<br>' +
+                '<i style="background-color: #e31a1c">' + '</i>230200 - 366629 (kWh)<br>' +
+                '<i style="background-color: #bd0026">' + '</i>366629 - 673504 (kWh)<br>' +
+                '<i style="background-color: #800026">' + '</i>673504 - 5016660 (kWh)<br>'
             return div;
         };
         legend.addTo(map);
