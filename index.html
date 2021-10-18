@@ -136,7 +136,7 @@
                 fillOpacity: 0.7
             };
         }
-        // var url = 'laplata_gj.geojson';
+        // var url = 'data/aplata_gj.geojson';
         // Add centroid variable
         var centro = L.layerGroup()
 
@@ -151,7 +151,7 @@
               }
           });*/
 
-        $.getJSON('laplata_gj.geojson', function (data) {
+        $.getJSON('data/laplata_gj.geojson', function (data) {
             myLayer = L.geoJSON(data,
                 { style: build_style, onEachFeature: Base_pop }).addTo(map);
         });
