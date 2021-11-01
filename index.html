@@ -49,33 +49,37 @@
         }
 
 
-        .description {
-            font-size: 13px;
-            line-height: 18px;
-            color: #333333;
-            font-family: 'Open Sans', Helvetica, sans-serif;
-            padding: 5px 14px;
-            background-color: rgba(245, 245, 220, 0.8);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-            max-width: 290px;
-            border: 1px solid grey;
-        }
-        .description img {
-            width: 150px;
-            margin: auto;
-            display: block;
-            float: left;
-        }
-        .description img.two {
-            width: 75px;
-            margin: auto;
-            display: block;
+       .description {
+                font-size: 12px;
+                line-height: 14px;
+                color: #333333;
+                font-family: 'Open Sans', Helvetica, sans-serif;
+                padding: 2px 10px;
+                background-color: rgba(245, 245, 220, 0.8);
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+                border-radius: 5px;
+                max-width: 300px;
+                border: 1px solid grey;
             }
-        .description p {
-            font-size: 14px;
-            line-height: 24px;
-        }
+            .description img {
+                width: 100px;
+                height: 75px;
+                margin: auto;
+                display: block;
+                float: left;
+            }
+            .description img.two {
+                width: 75px;
+                height: 75px;
+                margin: auto;
+                display: flex;
+                text-align: right;
+                }
+            .description p {
+                font-size: 12px;
+                line-height: 14px;
+                text-align: center;
+            }
     </style>
 </head>
 
@@ -222,8 +226,10 @@
                 '<li>Usable Solar Power (kWh)- available building rooftop area multiplied by GHI</li>' +
                 '<li>Electricity Production (kWh)- usable solar power multiplied by solar panel efficiency and a performance ratio</li>' +
                 '</ul>' +
+                'The buildings outlined in <b style="color:blue">blue</b> are municipal buildings. ' +
                 'By clicking the menu located below the legend on the upper left, you can switch between OSM and CartoDB standard road maps, and a ESRI satellite image map.' +
-                '<img src="images/ICLEI-mainlogo-RGB.png">' + '<img src="images/100RE-logo.png" class= "two">';
+                '<img src="images/ICLEI-mainlogo-RGB.png">' + '<img src="images/100RE-logo.png" class= "two"><br>' +
+                '<i style="color:#a3c2c2">Map created by Einav Grinberg</i>';
 
             // Return the Legend div containing the HTML content
 
