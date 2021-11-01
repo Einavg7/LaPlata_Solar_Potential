@@ -164,9 +164,9 @@
         function Base_pop(feature, layer) {
             layer.bindPopup('<p><b>Building Name: </b>' + feature.properties.name +
                 '</p><p><b>Type of Building: </b>' + feature.properties.type +
-                '</p><p><b>Mean GHI (W/m2): </b>' + feature.properties._mean +
-                '</p><p><b>Usable Solar Power (kWh): </b>' + feature.properties.usable_sr +
-                '</p><p><b>Electricity Production (kWh): </b>' + feature.properties.elec_prod + '</p>');
+                '</p><p><b>Mean GHI (W/m2): </b>' + feature.properties._mean.toLocaleString('en-US', {maximumFractionDigits:2}) +
+                '</p><p><b>Usable Solar Power (kWh): </b>' + feature.properties.usable_sr.toLocaleString('en-US', {maximumFractionDigits:2}) +
+                '</p><p><b>Electricity Production (kWh): </b>' + feature.properties.elec_prod.toLocaleString('en-US', {maximumFractionDigits:2}) + '</p>');
         };
        
         function build_style2(feature) {
@@ -189,15 +189,15 @@
             var div = L.DomUtil.create("div", "legend");
             div.innerHTML =
                 '<i style="background-color: #ffffcc">' +
-                '</i>2346 - 15528 (kWh)<br>' +
-                '<i style="background-color: #ffeda0">' + '</i>15528 - 21511 (kWh)<br>' +
-                '<i style="background-color: #fed976">' + '</i>21511 - 28656 (kWh)<br>' +
-                '<i style="background-color: #feb24c">' + '</i>28656 - 37394 (kWh)<br>' +
-                '<i style="background-color: #fd8d3c">' + '</i>37394 - 53252 (kWh)<br>' +
-                '<i style="background-color: #fc4e2a">' + '</i>53252 - 84412 (kWh)<br>' +
-                '<i style="background-color: #e31a1c">' + '</i>84412 - 148527 (kWh)<br>' +
-                '<i style="background-color: #bd0026">' + '</i>148527 - 369838 (kWh)<br>' +
-                '<i style="background-color: #800026">' + '</i>369838 - 10541243 (kWh)<br>'
+                '</i>2,346 - 15,528 (kWh)<br>' +
+                '<i style="background-color: #ffeda0">' + '</i>15,528 - 21,511 (kWh)<br>' +
+                '<i style="background-color: #fed976">' + '</i>21,511 - 28,656 (kWh)<br>' +
+                '<i style="background-color: #feb24c">' + '</i>28,656 - 37,394 (kWh)<br>' +
+                '<i style="background-color: #fd8d3c">' + '</i>37,394 - 53,252 (kWh)<br>' +
+                '<i style="background-color: #fc4e2a">' + '</i>53,252 - 84,412 (kWh)<br>' +
+                '<i style="background-color: #e31a1c">' + '</i>84,412 - 148,527 (kWh)<br>' +
+                '<i style="background-color: #bd0026">' + '</i>148,527 - 369,838 (kWh)<br>' +
+                '<i style="background-color: #800026">' + '</i>369,838 - 10,541,243 (kWh)<br>'
             return div;
         };
         legend.addTo(map);
