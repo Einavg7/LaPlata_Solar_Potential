@@ -152,7 +152,7 @@
               }
           });*/
 
-        $.getJSON('data/laplata_gj.geojson', function (data) {
+        $.getJSON('data/laplata_osm_wmuni.geojson', function (data) {
             myLayer = L.geoJSON(data,
                 { style: build_style, onEachFeature: Base_pop }).addTo(map);
         });
@@ -164,7 +164,20 @@
                 '</p><p><b>Usable Solar Power (kWh): </b>' + feature.properties.usable_sr +
                 '</p><p><b>Electricity Production (kWh): </b>' + feature.properties.elec_prod + '</p>');
         };
-
+       
+        function build_style2(feature) {
+            return {
+                fillColor: build_color(feature.properties.elec_prod),
+                weight: 5,
+                opacity: 1,
+                color: "Blue",
+                fillOpacity: 0.7
+            };
+        }
+        $.getJSON('data/laplata_muni.geojson', function (data) {
+            muniLayer = L.geoJSON(data,
+                { style: build_style2, onEachFeature: Base_pop }).addTo(map);
+        });
         //myLayer.addTo(map);
         var legend = L.control({ position: "topleft" });
 
