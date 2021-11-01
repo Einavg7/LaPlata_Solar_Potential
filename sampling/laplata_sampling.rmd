@@ -1,0 +1,432 @@
+---
+title: "Sampling La Plata"
+author: "Einav Grinberg"
+date: "10/25/2021"
+output: bookdown::html_document2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(sf)
+library(spatstat)
+library(raster)
+library(units)
+library(plotrix)  
+library(sfsmisc)
+library(mapview)
+library(rgdal)
+library(knitr)
+input_path <- setwd("C:/Users/einav/Desktop/Thesis data/La Plata")
+files <- list.files(input_path, pattern = "[.]shp$")
+```
+
+# Simple Random Spatial Sampling 
+
+Two sets of random spatial samples have been drawn from the city of La Plata
+
+1. A sample of 100 building rooftops
+2. A sample of 300 building rooftops
+
+The samples were created using the **Vector Research Tools** -> **Random points inside a polygon** in QGIS^[https://www.qgis.org/en/site/]. Then the building rooftops were digitized in QGIS using Google Satellite Hybrid^[https://qms.nextgis.com/geoservices/1135/], a Tile Map Service (TMS) layer.
+
+For every sample the rooftop area $m^2$, the mean global horizontal irradiation $(\frac{kWh}{m^2})$, the usable solar radiation $(kWh)$ and renewable electricity production $(kWh)$ were calculated. 
+
+*Buildings rooftops area that are equal and under 30 $m^2$ are defined as 0. Some of the sample points were computed on non built-up areas/roads/parks etc., therefore they were given a 0 to include a density factor in the calculation.*
+
+```{r random sampling, warning=FALSE, echo=FALSE}
+laplata_poly <- read_sf("polygon_3.shp")
+laplata_poly <- st_transform(laplata_poly, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+
+sample1 <- read_sf("sample100.shp")
+sample1 <- st_transform(sample1, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+#change to 0 above and equal 30 sqm
+sample1$elec_prod[sample1$area <= 30] <- 0
+
+sample1$elec_prod_mwh <- sample1$elec_prod/1000
+sample1$elec_prod_gwh <- sample1$elec_prod/1000000
+
+head(sample1)
+summary(sample1)
+
+sample2 <- read_sf("sample300.shp")
+sample2 <- st_transform(sample2, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+#change to 0 above and equal 30 sqm
+sample2$elec_prod[sample2$area <= 30] <- 0
+
+sample2$elec_prod_mwh <- sample2$elec_prod/1000
+sample2$elec_prod_gwh <- sample2$elec_prod/1000000
+
+head(sample2)
+summary(sample2)
+
+mapview(laplata_poly,  map.types =  "CartoDB.VoyagerLabelsUnder", alpha.regions = 0, legend=F, color="red", lwd=2) + mapview(sample1, col.regions="blue") + mapview(sample2, col.regions="green")
+```
+
+## Sample 1 computations
+
+Calculation of the sample mean is represented by $\overline{y}$.
+Calculation of the sample variance is represented by $s$.
+
+```{r sample 1 c, warning=FALSE, echo=FALSE}
+boxplot(sample1$elec_prod_mwh, horizontal=TRUE, main="Sample 1", xlab = "Renewable Electricity Production Potential (mWh)")
+
+n1 <- as.numeric(nrow(sample1))
+y1 <- mean(sample1$elec_prod_mwh)
+paste("The mean of sample 1: ", round(y1,2), "(mWh)")
+N_all <- 2482 #all buildings in the city
+s1 <- var(sample1$elec_prod_mwh)
+paste("The variance of sample 1: ", round(s1,2), "(mWh)")
+```
+The following equation calculates the unbiased variance of the estimator $\overline{y}$: 
+
+\begin{equation} 
+  \hat{var}(\overline{y})= (\frac{N-n}{N})*(\frac{s^2}{n}) (\#eq:unvar)
+\end{equation} 
+
+* $N$ is the total population size -> the number of all the buildings in La Plata (2,482). 
+* $n$ is the sample size -> 100. 
+* $s^2$ is the sample variance. 
+
+The following equation calculates the estimated standard error of the estimator $\overline{y}$: 
+
+\begin{equation} 
+  SEM = \sqrt{\hat{var}(\overline{y})} (\#eq:se)
+\end{equation} 
+
+```{r variance, warning=FALSE, echo=FALSE}
+var_un1 <- ((N_all-n1)/N_all)*(s1/n1)
+paste("The variance of the sample mean: ", round(var_un1,2) , "(mWh)")
+
+ese1 = sqrt(var_un1) #estimated standard error of variance
+paste("The estimated standard error of the sample mean: ", round(ese1,2), "(mWh)")
+```
+
+The following equation calculates an unbiased estimator of the population total $\hat{t}$: 
+\begin{equation} 
+  \hat{t} = N*{\overline{y}} (\#eq:t)
+\end{equation} 
+
+The following equation calculates the unbiased variance of the estimator $\hat{t}$: 
+
+\begin{equation} 
+  \hat{var}(\hat{t})= N^2*\hat{var}(\overline{y}) (\#eq:tv)
+\end{equation} 
+
+The following equation calculates the estimated standard error of the estimator $\hat{t}$: 
+\begin{equation} 
+  SEM = \sqrt{\hat{var}(\hat{t})} (\#eq:set)
+\end{equation} 
+
+```{r total, warning=FALSE, echo=FALSE}
+t_un1 = N_all*y1 
+paste("The estimation of the renewable electricity production potential by all the buildings in the city:", round(t_un1,2), "(mWh)")
+
+t_var_un1 = (N_all^2) * var_un1 #unbiased variance with the estimate of the total
+paste("The variance of the estimated total:", round(t_var_un1,2), "(mWh)")
+
+ese_t1 = sqrt(t_var_un1) #estimated standard error of total
+paste("The estimated standard error of the total:", round(ese_t1,2), "(mWh)")
+```
+
+```{r CI 1, warning=FALSE ,echo=FALSE}
+#confidence interval with 95% 
+CI1 <- t_un1 + qt(c(0.05,0.95), df=99) * ese_t1
+paste("The 95% confidence interval estimation for sample 1 is: ", "(",round(CI1[1],2)," (mWh), ",round(CI1[2],2)," (mwh))", sep = "")
+```
+
+## Sample 2 computations
+
+Calculation of the sample mean is represented by $\overline{y}$.
+Calculation of the sample variance is represented by $s$.
+
+```{r sample 2 c, warning=FALSE, echo=FALSE}
+boxplot(sample2$elec_prod_mwh, horizontal=TRUE, main="Sample 2", xlab = "Renewable Electricity Production Potential (mWh)")
+
+n2 <- as.numeric(nrow(sample2))
+y2 <- mean(sample2$elec_prod_mwh)
+paste("The mean of sample 2: ", round(y2,2), "(mWh)")
+N_all <- 2482 #all buildings in the city
+s2 <- var(sample2$elec_prod_mwh)
+paste("The variance of sample 2: ", round(s2,2), "(mWh)")
+```
+
+Equation \@ref(eq:unvar) calculates the unbiased variance of the estimator $\overline{y}$. 
+
+Equation \@ref(eq:se) calculates the estimated standard error of the estimator $\overline{y}$.
+
+```{r variance 2, warning=FALSE, echo=FALSE}
+var_un2 <- ((N_all-n2)/N_all)*(s2/n2)
+paste("The variance of the sample mean: ", round(var_un2,2), "(mWh)")
+
+ese2 = sqrt(var_un2) #estimated standard error of variance
+paste("The estimated standard error of the sample mean: ", round(ese2,2), "(mWh)")
+```
+
+Equation \@ref(eq:t) calculates an unbiased estimator of the population total $\hat{t}$.
+
+Equation \@ref(eq:tv) calculates the unbiased variance of the estimator $\hat{t}$.
+
+Equation \@ref(eq:set) calculates the estimated standard error of the estimator $\hat{t}$.
+
+```{r total 2, warning=FALSE, echo=FALSE}
+t_un2 = N_all*y2 
+paste("The estimation of the renewable electricity production potential by all the buildings in the city:", round(t_un2,2), "(mWh)")
+
+t_var_un2 = (N_all^2) * var_un2 #unbiased variance with the estimate of the total
+paste("The variance of the estimated total:", round(t_var_un2,2), "(mWh)")
+
+ese_t2 = sqrt(t_var_un2) #estimated standard error of total
+paste("The estimated standard error of the total:", round(ese_t2,2), "(mWh)")
+```
+
+```{r CI 2, warning=FALSE ,echo=FALSE}
+#confidence interval with 95% 
+CI2 <- t_un2 + qt(c(0.05,0.95), df=299) * ese_t2
+paste("The 95% confidence interval estimation for sample 2 is: ", "(",round(CI2[1],2)," (mWh), ",round(CI2[2],2)," (mwh))", sep = "")
+```
+
+## Sample 1 and 2 combined computations 
+
+The following calculations are for both sample 1 and sample 2 together, resulting in a total sample of 400 building rooftops. We will call this sample, sample 3. 
+
+Calculation of the sample mean is represented by $\overline{y}$.
+Calculation of the sample variance is represented by $s$.
+```{r both, warning=FALSE, echo=FALSE}
+#both samples
+sample3 <- rbind(sample1, sample2)
+
+n3 <- as.numeric(nrow(sample3))
+y3 <- mean(sample3$elec_prod_mwh)
+paste("The mean of sample 3: ", round(y3,2), "(mWh)")
+N_all <- 2482 #all buildings in the city
+s3 <- var(sample3$elec_prod_mwh)
+paste("The variance of sample 3: ", round(s3,2), "(mWh)")
+```
+
+Equation \@ref(eq:unvar) calculates the unbiased variance of the estimator $\overline{y}$. 
+
+Equation \@ref(eq:se) calculates the estimated standard error of the estimator $\overline{y}$.
+
+```{r variance 3, warning=FALSE, echo=FALSE}
+var_un3 <- ((N_all-n3)/N_all)*(s3/n3)
+paste("The variance of the sample mean: ", round(var_un3,2), "(mWh)")
+
+ese3 = sqrt(var_un3) #estimated standard error of variance
+paste("The estimated standard error of the sample mean: ", round(ese3,2), "(mWh)")
+```
+
+Equation \@ref(eq:t) calculates an unbiased estimator of the population total $\hat{t}$.
+
+Equation \@ref(eq:tv) calculates the unbiased variance of the estimator $\hat{t}$.
+
+Equation \@ref(eq:set) calculates the estimated standard error of the estimator $\hat{t}$.
+
+```{r total 3, warning=FALSE, echo=FALSE}
+t_un3 = N_all*y3
+paste("The estimation of the renewable electricity production potential by all the buildings in the city:", round(t_un3,2), "(mWh)")
+
+t_var_un3 = (N_all^2) * var_un3 #unbiased variance with the estimate of the total
+paste("The variance of the estimated total:", round(t_var_un3,2), "(mWh)")
+
+ese_t3 = sqrt(t_var_un3) #estimated standard error of total
+paste("The estimated standard error of the total:", round(ese_t3,2), "(mWh)")
+```
+
+```{r CI 3, warning=FALSE ,echo=FALSE}
+#confidence interval with 95% 
+CI3 <- t_un3 + qt(c(0.05,0.95), df=399) * ese_t3
+paste("The 95% confidence interval estimation for sample 3 is: ", "(",round(CI3[1],2)," (mWh), ",round(CI3[2],2)," (mwh))", sep = "")
+```
+
+# Stratified Random Spatial Sampling 
+
+## Equal sample size stratification
+
+La Plata is divided to 2 stratas based on satellite imagery provided by the Copernicus Land Monitoring Service global maps of land cover & cover changes and related surface area statistics^[https://lcviewer.vito.be/about]. 
+
+Strata 1 represents built up area in the city and Strata 2 represents non built up area.
+
+For each strata 60 random points were computed and then 20 building rooftops were digitized using the same methods as in chapter \@ref(simple-random-spatial-sampling).
+
+```{r stratified sampling, warning=FALSE, echo=FALSE}
+landuse <- raster("laplata_lubu.tif")
+
+bu <- read_sf("strata_bu.shp")
+bu <- st_transform(bu, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+bu$landuse <- "Built up"
+nonbu <- read_sf("strata_nonbu.shp")
+nonbu <- st_transform(nonbu, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+nonbu$landuse <- "Non built up"
+
+#combine stratas and change to 0 above and equal 30 sqm
+strat <- rbind(bu, nonbu)
+strat$elec_prod[strat$area <= 30] <- 0
+strat$elec_prod_mwh <- strat$elec_prod/1000
+strat$elec_prod_gwh <- strat$elec_prod/1000000
+
+head(strat)
+summary(strat)
+
+mapview(landuse,  map.types =  "CartoDB.VoyagerLabelsUnder", alpha.regions = 0.15, legend=F, col.regions=list("yellow","black")) + mapview(strat, zcol="landuse")
+```
+
+After stratification, the stratas are combined to one sample and the computations are the same as for random sampling.
+
+```{r strat c, warning=FALSE,echo=FALSE}
+boxplot(strat$elec_prod_mwh ~ strat$landuse, main="Samples from La Plata Land Use Classification", ylab = "Renewable Electricity Production Potential (mWh)", xlab = "Strata by Land Use",cex.axis = 0.7)
+
+nstrat <- as.numeric(nrow(strat))
+# calculate means for each group
+aggregate(data=strat, elec_prod_mwh~landuse, FUN=mean)
+
+ystrat <- mean(strat$elec_prod_mwh)
+paste("The mean of the stratfied sample is: ", round(ystrat,2), "(mWh)")
+N_all <- 2482 #all buildings in the city
+sstrat <- var(strat$elec_prod_mwh)
+paste("The variance of the stratfied sample is: ", round(sstrat,2), "(mWh)")
+```
+
+Equation \@ref(eq:unvar) calculates the unbiased variance of the estimator $\overline{y}$. 
+
+Equation \@ref(eq:se) calculates the estimated standard error of the estimator $\overline{y}$.
+
+```{r variance strat, warning=FALSE, echo=FALSE}
+var_unstrat <- ((N_all-nstrat)/N_all)*(sstrat/nstrat)
+paste("The variance of the sample mean: ", round(var_unstrat,2), "(mWh)")
+
+esestrat = sqrt(var_unstrat) #estimated standard error of variance
+paste("The estimated standard error of the sample mean: ", round(esestrat,2), "(mWh)")
+```
+
+Equation \@ref(eq:t) calculates an unbiased estimator of the population total $\hat{t}$.
+
+Equation \@ref(eq:tv) calculates the unbiased variance of the estimator $\hat{t}$.
+
+Equation \@ref(eq:set) calculates the estimated standard error of the estimator $\hat{t}$.
+
+```{r total strat, warning=FALSE, echo=FALSE}
+t_unstrat = N_all*ystrat
+paste("The estimation of the renewable electricity production potential by all the buildings in the city:", round(t_unstrat,2), "(mWh)")
+
+t_var_strat = (N_all^2) * var_unstrat #unbiased variance with the estimate of the total
+paste("The variance of the estimated total:", round(t_var_strat,2), "(mWh)")
+
+ese_tstrat = sqrt(t_var_strat) #estimated standard error of total
+paste("The estimated standard error of the total:", round(ese_tstrat,2), "(mWh)")
+```
+
+```{r CI strat, warning=FALSE ,echo=FALSE}
+#confidence interval with 95% 
+CIstrat <- t_unstrat + qt(c(0.05,0.95), df=119) * ese_tstrat
+paste("The 95% confidence interval estimation for the stratified sample is: ", "(",round(CIstrat[1],2)," (mWh), ",round(CIstrat[2],2)," (mwh))", sep = "")
+```
+
+## Proportional allocation stratification
+
+When dividing the city of La Plata into built up and non built up area, the sample calculations from the built up area present more variable strata. 
+
+Therefore, 2 new stratas are computed - 
+
+1. Proportionately allocated strata in the built up area - a sample of 95 building rooftops
+2. Proportionately allocated strata in the non built up area - a sample of 5 building rooftops.
+
+```{r stratified allocation sampling, warning=FALSE, echo=FALSE}
+landuse <- raster("laplata_lubu.tif")
+
+bu_prop <- read_sf("strata_prop_bu.shp")
+bu_prop <- st_transform(bu_prop, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+bu_prop$landuse <- "Built up"
+nonbu_prop <- read_sf("strata_prop_nonbu.shp")
+nonbu_prop <- st_transform(nonbu_prop, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
+nonbu_prop$landuse <- "Non built up"
+
+#combine stratas and change to 0 above and equal 30 sqm
+strat_prop <- rbind(bu_prop, nonbu_prop)
+strat_prop$elec_prod[strat_prop$area <= 30] <- 0
+strat_prop$elec_prod_mwh <- strat_prop$elec_prod/1000
+strat_prop$elec_prod_gwh <- strat_prop$elec_prod/1000000
+
+head(strat_prop)
+summary(strat_prop)
+
+mapview(landuse,  map.types =  "CartoDB.VoyagerLabelsUnder", alpha.regions = 0.15, legend=F, col.regions=list("yellow","black")) + mapview(strat_prop, zcol="landuse")
+```
+
+After stratification, the stratas are combined to one sample and the computations are the same as for random sampling.
+
+```{r strat_prop c, warning=FALSE,echo=FALSE}
+boxplot(strat_prop$elec_prod_mwh ~ strat_prop$landuse, main="Samples from La Plata Land Use Classification", ylab = "Renewable Electricity Production Potential (mWh)", xlab = "Proportional Allocated Strata by Land Use",cex.axis = 0.7)
+
+nstrat_prop <- as.numeric(nrow(strat_prop))
+# calculate means for each group
+aggregate(data=strat_prop, elec_prod_mwh~landuse, FUN=mean)
+
+ystrat_prop <- mean(strat_prop$elec_prod_mwh)
+paste("The mean of the stratfied sample is: ", round(ystrat_prop,2), "(mWh)")
+N_all <- 2482 #all buildings in the city
+sstrat_prop <- var(strat_prop$elec_prod_mwh)
+paste("The variance of the stratfied sample is: ", round(sstrat_prop,2), "(mWh)")
+```
+Equation \@ref(eq:unvar) calculates the unbiased variance of the estimator $\overline{y}$. 
+
+Equation \@ref(eq:se) calculates the estimated standard error of the estimator $\overline{y}$.
+
+```{r variance strat_prop, warning=FALSE, echo=FALSE}
+var_unstrat_prop <- ((N_all-nstrat_prop)/N_all)*(sstrat_prop/nstrat_prop)
+paste("The variance of the sample mean: ", round(var_unstrat,2), "(mWh)")
+
+esestrat_prop = sqrt(var_unstrat_prop) #estimated standard error of variance
+paste("The estimated standard error of the sample mean: ", round(esestrat_prop,2), "(mWh)")
+```
+
+Equation \@ref(eq:t) calculates an unbiased estimator of the population total $\hat{t}$.
+
+Equation \@ref(eq:tv) calculates the unbiased variance of the estimator $\hat{t}$.
+
+Equation \@ref(eq:set) calculates the estimated standard error of the estimator $\hat{t}$.
+
+```{r total strat_prop, warning=FALSE, echo=FALSE}
+t_unstrat_prop = N_all*ystrat_prop
+paste("The estimation of the renewable electricity production potential by all the buildings in the city:", round(t_unstrat_prop,2), "(mWh)")
+
+t_var_strat_prop = (N_all^2) * var_unstrat_prop #unbiased variance with the estimate of the total
+paste("The variance of the estimated total:", round(t_var_strat_prop,2), "(mWh)")
+
+ese_tstrat_prop = sqrt(t_var_strat_prop) #estimated standard error of total
+paste("The estimated standard error of the total:", round(ese_tstrat_prop,2), "(mWh)")
+```
+
+```{r CI strat_prop, warning=FALSE ,echo=FALSE}
+#confidence interval with 95% 
+CIstrat_prop <- t_unstrat_prop + qt(c(0.05,0.95), df=99) * ese_tstrat_prop
+paste("The 95% confidence interval estimation for the stratified sample is: ", "(",round(CIstrat_prop[1],2)," (mWh), ",round(CIstrat_prop[2],2)," (mwh))", sep = "")
+```
+
+
+# 95% Confidence Intervals
+
+```{r CI plot, echo=FALSE, warning=FALSE}
+table <- data.frame(sample=c("Sample 1 - 100", "Sample 2 - 300", "Both Samples - 400", "Stratified Sample - 120", "Allocated Stratified Sample - 100"),
+                    mean=c(y1, y2, y3, ystrat, ystrat_prop),
+                    variance_of_mean=c(var_un1, var_un2, var_un3, var_unstrat, var_unstrat_prop),
+                    standard_error_mean=c(ese1,ese2,ese3,esestrat, esestrat_prop), total_estimation=c(t_un1, t_un2, t_un3, t_unstrat, t_unstrat_prop), variance_of_total=c(t_var_un1, t_var_un2, t_var_un3, t_var_strat, t_var_strat_prop), standard_error_total=c(ese_t1, ese_t2, ese_t3, ese_tstrat, ese_tstrat_prop), CI_low=c(CI1[1],CI2[1],CI3[1],CIstrat[1],CIstrat_prop[1]), CI_up=c(CI1[2],CI2[2],CI3[2],CIstrat[2],CIstrat_prop[2]))
+
+
+plotCI(y = table$total_estimation,               # plotrix plot with confidence intervals
+       x = 1:5, li = table$CI_low,
+       ui = table$CI_up ,scol="red", xaxt="n", yaxt="n",
+       xlab="", ylab="Renewable Electricity (mWh)", main="Confidence Intervals", xlim=c(1,5))
+#text(x = totals$sample,y = totals$value, totals$value, pos = 3,srt=45)
+axis(side=1,at=1:5,  ## add custom x-axis
+     label=c("sample 1 - 100", "sample 2 - 300", "both samples - 400","stratified sample - 120", "allocated stratified sample - 100"), cex.axis = 0.7)
+eaxis(2, at.small = F, cex.axis = 0.7)
+```
+
+# Summarizing Table
+
+```{r table, warning=FALSE,echo=FALSE}
+
+kable(table, digits = 2, format.args = list(big.mark = ",", scientific = FALSE), col.names = c('Sample', 'Mean', 'Var of Mean', 'SEM', 'Total Estimation', 'Var of Total', 'SET', 'Lower CI', 'Upper CI'), algin="lccccccccc", caption = "Summary of Computation Results (mWh)")
+```
