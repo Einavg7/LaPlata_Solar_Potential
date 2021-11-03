@@ -18,7 +18,7 @@ library(sfsmisc)
 library(mapview)
 library(rgdal)
 library(knitr)
-input_path <- setwd("C:/Users/einav/Desktop/Thesis data/La Plata")
+input_path <- setwd(".../data")
 files <- list.files(input_path, pattern = "[.]shp$")
 ```
 
