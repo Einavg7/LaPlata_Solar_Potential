@@ -1,7 +1,7 @@
 ---
 title: "Sampling La Plata"
 author: "Einav Grinberg"
-date: "10/25/2021"
+date: "`r Sys.Date()`"
 output: bookdown::html_document2
 ---
 
@@ -82,7 +82,7 @@ mapview(laplata_poly,  map.types =  "CartoDB.VoyagerLabelsUnder", alpha.regions 
 ## Sample 1 computations
 
 Calculation of the sample mean is represented by $\overline{y}$.
-Calculation of the sample variance is represented by $s$.
+Calculation of the sample variance is represented by $s^2$.
 
 ```{r sample 1 c, warning=FALSE, echo=FALSE}
 boxplot(sample1$elec_prod_mwh, horizontal=TRUE, main="Sample 1", xlab = "Renewable Electricity Production Potential (mWh)")
@@ -371,7 +371,7 @@ mapview(landuse,  map.types =  "CartoDB.VoyagerLabelsUnder", alpha.regions = 0.1
 After stratification, the strata are combined to one sample and the computations are the same as for random sampling.
 
 ```{r strat_prop c, warning=FALSE,echo=FALSE}
-boxplot(strat_prop$elec_prod_mwh ~ strat_prop$landuse, main="Samples from La Plata Land Use Classification", ylab = "Renewable Electricity Production Potential (mWh)", xlab = "Proportional Allocated Strata by Land Use",cex.axis = 0.7)
+boxplot(strat_prop$elec_prod_mwh ~ strat_prop$landuse, main="Samples from La Plata Land Use Classification", ylab = "Renewable Electricity Production Potential (mWh)", xlab = "Optimal Allocated Strata by Land Use",cex.axis = 0.7)
 
 nstrat_prop <- as.numeric(nrow(strat_prop))
 # calculate means for each group
@@ -434,7 +434,7 @@ plotCI(y = table$total_estimation,               # plotrix plot with confidence 
        xlab="", ylab="Renewable Electricity (mWh)", main="Confidence Intervals", xlim=c(1,5))
 #text(x = totals$sample,y = totals$value, totals$value, pos = 3,srt=45)
 axis(side=1,at=1:5,  ## add custom x-axis
-     label=c("sample 1 - 100", "sample 2 - 300", "both samples - 400","stratified sample - 120", "allocated stratified sample - 100"), cex.axis = 0.7)
+     label=c("sample 1 - 100", "sample 2 - 300", "both samples - 400","stratified sample - 120", "allocated stratified sample - 100"), cex.axis = 0.5)
 eaxis(2, at.small = F, cex.axis = 0.7)
 ```
 
