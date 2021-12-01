@@ -6,7 +6,7 @@ library(sf)
 library(spatstat)
 library(raster)
 library(units)
-setwd("C:/Users/einav/Desktop/Thesis data/La Plata")
+setwd("...")
 
 muni <- read_sf("laplata_build.shp")
 muni <- st_transform(muni, "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs")
